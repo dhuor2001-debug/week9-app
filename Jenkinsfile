@@ -1,11 +1,12 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-        IMAGE_NAME = 'richieit/sportswear-store'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
-    }
+environment {
+    DOCKER_HOST = 'tcp://localhost:2375'
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+    IMAGE_NAME = 'richieit/sportswear-store'
+    IMAGE_TAG = "${env.BUILD_NUMBER}"
+}
 
     stages {
         stage('Checkout') {
@@ -53,3 +54,4 @@ pipeline {
         }
     }
 }
+
