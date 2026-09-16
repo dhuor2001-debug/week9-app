@@ -1,12 +1,12 @@
 pipeline {
     agent any
 
-environment {
-    DOCKER_HOST = 'tcp://localhost:2375'
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-    IMAGE_NAME = 'richieit/sportswear-store'
-    IMAGE_TAG = "${env.BUILD_NUMBER}"
-}
+    environment {
+        DOCKER_HOST = 'tcp://localhost:2375'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        IMAGE_NAME = 'richieit/sportswear-store'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
 
     stages {
         stage('Checkout') {
@@ -34,12 +34,14 @@ environment {
         }
 
         stage('Docker Push') {
-    steps {
-        bat "docker login -u %DOCKERHUB_CREDENTIALS_USR% -p %DOCKERHUB_CREDENTIALS_PSW%"
-        bat "docker push %IMAGE_NAME%:%IMAGE_TAG%"
-        bat "docker push %IMAGE_NAME%:latest"
+            steps {
+                bat "docker login -u %DOCKERHUB_CREDENTIALS_USR% -p %DOCKERHUB_CREDENTIALS_PSW%"
+                bat "docker push %IMAGE_NAME%:%IMAGE_TAG%"
+                bat "docker push %IMAGE_NAME%:latest"
+            }
+        }
     }
-}
+
     post {
         always {
             bat 'docker logout'
@@ -51,5 +53,4 @@ environment {
             echo 'Pipeline failed. Check logs above.'
         }
     }
-}
 }
