@@ -1,7 +1,18 @@
 const http = require('http');
 const { spawn } = require('child_process');
 
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT: 3999 } });
+const server = spawn('node', ['server.js'], {
+  env: { ...process.env, PORT: 3999 },
+  stdio: ['ignore', 'pipe', 'pipe']
+});
+
+server.stdout.on('data', d => process.stdout.write(`[server] ${d}`));
+server.stderr.on('data', d => process.stderr.write(`[server-err] ${d}`));
+
+server.on('error', (err) => {
+  console.error('❌ Failed to spawn server process:', err);
+  process.exit(1);
+});
 
 function check(path) {
   return new Promise((resolve, reject) => {
@@ -13,9 +24,20 @@ function check(path) {
   });
 }
 
-setTimeout(async () => {
+async function waitForServer(retries = 10, delayMs = 500) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await check('/health');
+    } catch (err) {
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+  }
+  throw new Error('Server did not become ready in time');
+}
+
+(async () => {
   try {
-    const health = await check('/health');
+    const health = await waitForServer();
     if (health.status !== 200) throw new Error('Health check failed');
     console.log('✅ Health check passed');
 
@@ -27,8 +49,8 @@ setTimeout(async () => {
     server.kill();
     process.exit(0);
   } catch (err) {
-    console.error('❌ Test failed:', err.message);
+    console.error('❌ Test failed:', err);
     server.kill();
     process.exit(1);
   }
-}, 1000);
+})();
